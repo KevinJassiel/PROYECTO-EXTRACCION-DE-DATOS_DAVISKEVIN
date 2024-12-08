@@ -1,0 +1,52 @@
+import pymysql
+import WEBSCRAPING  # Importar el script de web scraping
+
+# Establecer la conexión con MySQL
+connection = pymysql.connect(
+    host="localhost",
+    user="root",
+    password="12345678",
+    database="imdb_pelis"  # Asegúrate de que la base de datos esté creada
+)
+
+# Obtener el DataFrame desde el script de web scraping
+productos_df = WEBSCRAPING.get_data()  # Llamamos a la función que retorna el DataFrame
+
+# Insertar los datos en la tabla peliculastop
+try:
+    # Crear un cursor para ejecutar las consultas SQL
+    cursor = connection.cursor()
+
+    # Recorrer cada fila del DataFrame y hacer la inserción
+    for _, row in productos_df.iterrows():
+        nombre = row['Nombre']
+        año = row['año']
+        duracion = row['duracion']
+        clasificacion = row['clasificacion']
+        calificacion = row['calificacion']
+
+        # Asegúrate de que la calificación tenga el formato correcto (reemplazar coma por punto)
+        calificacion = row['calificacion'].replace(',', '.')
+
+        # Convertir la calificación a float para asegurarse de que sea un número decimal
+        calificacion = float(calificacion)
+
+        # Insertar los datos en la tabla peliculastop
+        sql = """
+        INSERT INTO peliculastop (nombre_pelicula, año_pelicula, duracion_pelicula, clasificacion_pelicula, calificacion_pelicula)
+        VALUES (%s, %s, %s, %s, %s)
+        """
+        cursor.execute(sql, (nombre, año, duracion, clasificacion, calificacion))
+
+    # Confirmar los cambios
+    connection.commit()
+    print("Datos insertados correctamente en la base de datos.")
+
+except Exception as e:
+    print(f"Error al insertar datos: {e}")
+    connection.rollback()
+
+finally:
+    # Cerrar la conexión
+    cursor.close()
+    connection.close()
