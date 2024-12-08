@@ -1,0 +1,82 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+from bs4 import BeautifulSoup
+import pandas as pd
+from webdriver_manager.chrome import ChromeDriverManager
+
+# Descargar e instalar automáticamente el controlador de Chrome
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+# URL de la página web que quieres extraer
+url = "https://www.imdb.com/chart/top/?ref_=nv_mv_250"
+
+# Abre la página web
+driver.get(url)
+
+# Listas para almacenar los datos extraídos
+nombres_peliculas = []
+año_peliculas = []
+duracion_peliculas = []
+clasificacion_peliculas = []  # Corregido el nombre de la variable
+calificacion_peliculas = []  # Mantuve la variable que habías mencionado antes
+
+# Esperar a que la página se cargue completamente
+time.sleep(5)
+
+# Iterar para obtener productos hasta que no haya más páginas
+html = driver.page_source
+html = html.encode('utf-8').decode('utf-8')
+
+    # Crear el objeto BeautifulSoup
+soup = BeautifulSoup(html, 'html.parser')
+
+
+
+
+    # Encuentra todos los elementos de los productos
+pelis = soup.find_all('div', class_='ipc-metadata-list-summary-item__c')
+
+#prueba
+
+
+    # Extraer nombres y precios de los productos
+for producto in pelis:
+    nombre = producto.find('h3', class_='ipc-title__text').text.strip()
+    año = producto.find('span', class_='sc-300a8231-7 eaXxft cli-title-metadata-item').text.strip()
+    duracion = producto.find('span', class_='sc-300a8231-7 eaXxft cli-title-metadata-item').text.strip()
+    clasificacion = producto.find('span', class_='sc-300a8231-7 eaXxft cli-title-metadata-item').text.strip()
+    calificacion = producto.find('span', class_='ipc-rating-star--rating').text.strip()
+
+        # Guardar los datos extraídos
+    nombres_peliculas.append(nombre)
+    año_peliculas.append(año)
+    duracion_peliculas.append(duracion)
+    clasificacion_peliculas.append(clasificacion)
+    calificacion_peliculas.append(calificacion)
+
+
+# Cerrar el navegador
+driver.quit()
+
+def get_data():
+    return productos_df
+
+
+# Crear un DataFrame con los datos extraídos
+productos_df = pd.DataFrame({
+    'Nombre': nombres_peliculas,
+    'año': año_peliculas,
+    'duracion': duracion_peliculas,
+    'clasificacion': clasificacion_peliculas,
+    'calificacion': calificacion_peliculas
+})
+
+# Guardar los resultados en un archivo CSV
+productos_df.to_csv('pelis4.csv', index=False,encoding='utf-8')
+
+print("Datos extraídos y guardados correctamente.")
+
