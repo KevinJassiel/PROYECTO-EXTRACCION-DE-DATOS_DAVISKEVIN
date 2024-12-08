@@ -1,0 +1,89 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.express as px
+import pymysql
+import pandas as pd
+
+# Paso 1: Conexión a la base de datos MySQL y obtención de datos
+
+# Conexión a la base de datos MySQL
+connection = pymysql.connect(
+    host="localhost",
+    user="root",
+    password="12345678",
+    database="imdb_pelis"
+)
+
+# Consulta SQL para obtener los datos de películas
+query = "SELECT nombre_pelicula, año_pelicula, calificacion_pelicula FROM peliculastop"
+
+# Cargar los datos en un DataFrame
+productos_df = pd.read_sql(query, connection)
+
+# Cerrar la conexión
+connection.close()
+
+# Paso 2: Ordenar las películas por calificación y seleccionar el Top 10
+productos_df_sorted = productos_df.sort_values(by="calificacion_pelicula", ascending=False)
+top_10_df = productos_df_sorted.head(10)
+
+# Paso 3: Crear la figura del gráfico de dispersión
+fig = px.scatter(
+    productos_df,
+    x='año_pelicula',
+    y='calificacion_pelicula',
+    color='nombre_pelicula',
+    title="Calificación de Películas por Año",
+    labels={'año_pelicula': 'Año', 'calificacion_pelicula': 'Calificación'},
+    color_continuous_scale='Viridis'  # Elegimos una paleta de colores para el gráfico
+)
+
+# Paso 4: Agregar las imágenes de las películas en el Top 10
+# Aquí puedes añadir URLs de imágenes de películas (ejemplo de IMDB)
+top_10_df['image_url'] = [
+    'https://es.web.img3.acsta.net/medias/nmedia/18/74/26/88/20133359.jpg',  # Ejemplo de imagen (cambiar por imagen real)
+    'https://es.web.img3.acsta.net/pictures/18/06/12/12/12/0117051.jpg',
+    'https://es.web.img2.acsta.net/medias/nmedia/18/66/74/01/20350623.jpg',
+    'https://mx.web.img2.acsta.net/c_310_420/medias/nmedia/18/68/09/06/20197890.jpg',
+    'https://es.web.img2.acsta.net/pictures/210/022/21002260_20130429232241751.jpg',
+    'https://es.web.img2.acsta.net/medias/nmedia/18/87/16/07/19895812.jpg',
+    'https://es.web.img3.acsta.net/r_1280_720/pictures/14/02/27/09/35/442750.jpg',
+    'https://es.web.img2.acsta.net/pictures/17/06/12/10/21/182251.jpg',
+    'https://es.web.img3.acsta.net/medias/nmedia/18/89/67/45/20061512.jpg',
+    'https://es.web.img3.acsta.net/pictures/14/03/21/13/49/293020.jpg'
+]
+
+# Paso 5: Crear el layout del Dashboard
+app = dash.Dash(__name__)
+
+# Definir el layout
+app.layout = html.Div(style={'backgroundColor': '#FFB81C', 'padding': '20px'}, children=[
+    # Título
+    html.H1("Top 10 Películas Mejor Rankeadas",
+            style={'textAlign': 'center', 'color': 'black', 'fontSize': 32}),
+
+    # Descripción del gráfico
+    html.Div("Este dashboard muestra cuales son las peliculas mejor valoradas por los usuarios dentro de IMDb.",
+             style={'textAlign': 'center', 'color': 'black', 'fontSize': 18, 'paddingBottom': '20px'}),
+
+    # Gráfico de dispersión
+    dcc.Graph(figure=fig, style={'height': '50vh'}),
+
+    # Mostrar las películas del Top 10 con sus imágenes
+    html.Div([
+        html.Div([
+            html.Img(src=row['image_url'], style={'width': '200px', 'height': '300px', 'marginRight': '20px'}),
+            html.Div([
+                html.H3(row['nombre_pelicula'], style={'color': 'white'}),
+                html.P(f"Año: {row['año_pelicula']}", style={'color': 'white'}),
+                html.P(f"Calificación: {row['calificacion_pelicula']}", style={'color': 'white'}),
+            ], style={'display': 'inline-block'})
+        ], style={'display': 'flex', 'marginBottom': '20px'})
+        for _, row in top_10_df.iterrows()
+    ], style={'padding': '20px', 'color': 'white'})
+])
+
+# Ejecutar la app
+if __name__ == '__main__':
+    app.run_server(debug=True)
