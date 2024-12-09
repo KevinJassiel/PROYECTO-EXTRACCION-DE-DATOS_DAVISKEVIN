@@ -1,23 +1,24 @@
+#crear base de datos en mysql con el nombre de imdb_pelis
 import pymysql
-import WEBSCRAPING  # Importar el script de web scraping
+import WEBSCRAPING
 
-# Establecer la conexión con MySQL
+#conexion con MySQL
 connection = pymysql.connect(
     host="localhost",
     user="root",
     password="12345678",
-    database="imdb_pelis"  # Asegúrate de que la base de datos esté creada
+    database="imdb_pelis"  #es la base creada en el mysql
 )
 
-# Obtener el DataFrame desde el script de web scraping
-productos_df = WEBSCRAPING.get_data()  # Llamamos a la función que retorna el DataFrame
+# obtengo el dataframe desde el getter que hice en el code pasado
+productos_df = WEBSCRAPING.get_data()
 
-# Insertar los datos en la tabla peliculastop
+# Inserto los datos en la tabla peliculastop de mysql
 try:
-    # Crear un cursor para ejecutar las consultas SQL
+
     cursor = connection.cursor()
 
-    # Recorrer cada fila del DataFrame y hacer la inserción
+    # Recorre cada fila del DataFrame y hace una inserción
     for _, row in productos_df.iterrows():
         nombre = row['Nombre']
         año = row['año']
@@ -25,20 +26,20 @@ try:
         clasificacion = row['clasificacion']
         calificacion = row['calificacion']
 
-        # Asegúrate de que la calificación tenga el formato correcto (reemplazar coma por punto)
+        # me daba un error pero lo normalice para que quite las comas de la pagina y lo cambie por un punto
         calificacion = row['calificacion'].replace(',', '.')
 
-        # Convertir la calificación a float para asegurarse de que sea un número decimal
+        # Convierte la calificación a float para asegurarse de que sea un número decimal
         calificacion = float(calificacion)
 
-        # Insertar los datos en la tabla peliculastop
+        # Inserta los datos en la tabla peliculastop
         sql = """
         INSERT INTO peliculastop (nombre_pelicula, año_pelicula, duracion_pelicula, clasificacion_pelicula, calificacion_pelicula)
         VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(sql, (nombre, año, duracion, clasificacion, calificacion))
 
-    # Confirmar los cambios
+    # me aseguro de que los datos se hayan insertado
     connection.commit()
     print("Datos insertados correctamente en la base de datos.")
 
@@ -47,6 +48,6 @@ except Exception as e:
     connection.rollback()
 
 finally:
-    # Cerrar la conexión
+    # cierra la conexion
     cursor.close()
     connection.close()
