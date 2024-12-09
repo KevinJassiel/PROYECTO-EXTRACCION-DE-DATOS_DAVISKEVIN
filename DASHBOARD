@@ -5,9 +5,8 @@ import plotly.express as px
 import pymysql
 import pandas as pd
 
-# Paso 1: Conexión a la base de datos MySQL y obtención de datos
 
-# Conexión a la base de datos MySQL
+# hago la conexion de la base de datos creada en mysql
 connection = pymysql.connect(
     host="localhost",
     user="root",
@@ -15,20 +14,20 @@ connection = pymysql.connect(
     database="imdb_pelis"
 )
 
-# Consulta SQL para obtener los datos de películas
+# Consulta el SQL para ver los datos que ingrese
 query = "SELECT nombre_pelicula, año_pelicula, calificacion_pelicula FROM peliculastop"
 
-# Cargar los datos en un DataFrame
+# Cargar los datos
 productos_df = pd.read_sql(query, connection)
 
-# Cerrar la conexión
+
 connection.close()
 
-# Paso 2: Ordenar las películas por calificación y seleccionar el Top 10
+# ordeno las peliculas por las 10 mas altas en calificacion
 productos_df_sorted = productos_df.sort_values(by="calificacion_pelicula", ascending=False)
 top_10_df = productos_df_sorted.head(10)
 
-# Paso 3: Crear la figura del gráfico de dispersión
+# creo el grafico de dispercion con años y calificacion, con el proposito de que salgan los 250 datos disponibles
 fig = px.scatter(
     productos_df,
     x='año_pelicula',
@@ -39,10 +38,9 @@ fig = px.scatter(
     color_continuous_scale='Viridis'  # Elegimos una paleta de colores para el gráfico
 )
 
-# Paso 4: Agregar las imágenes de las películas en el Top 10
-# Aquí puedes añadir URLs de imágenes de películas (ejemplo de IMDB)
+# agrego los imagenes con las url
 top_10_df['image_url'] = [
-    'https://es.web.img3.acsta.net/medias/nmedia/18/74/26/88/20133359.jpg',  # Ejemplo de imagen (cambiar por imagen real)
+    'https://es.web.img3.acsta.net/medias/nmedia/18/74/26/88/20133359.jpg',
     'https://es.web.img3.acsta.net/pictures/18/06/12/12/12/0117051.jpg',
     'https://es.web.img2.acsta.net/medias/nmedia/18/66/74/01/20350623.jpg',
     'https://mx.web.img2.acsta.net/c_310_420/medias/nmedia/18/68/09/06/20197890.jpg',
@@ -54,23 +52,23 @@ top_10_df['image_url'] = [
     'https://es.web.img3.acsta.net/pictures/14/03/21/13/49/293020.jpg'
 ]
 
-# Paso 5: Crear el layout del Dashboard
+# creo el layou del dashboard
 app = dash.Dash(__name__)
 
-# Definir el layout
+# las caracteristicas del layout
 app.layout = html.Div(style={'backgroundColor': '#FFB81C', 'padding': '20px'}, children=[
-    # Título
+
     html.H1("Top 10 Películas Mejor Rankeadas",
             style={'textAlign': 'center', 'color': 'black', 'fontSize': 32}),
 
-    # Descripción del gráfico
+    # agregue una pequeña descripcion de mi dashboard
     html.Div("Este dashboard muestra cuales son las peliculas mejor valoradas por los usuarios dentro de IMDb.",
              style={'textAlign': 'center', 'color': 'black', 'fontSize': 18, 'paddingBottom': '20px'}),
 
-    # Gráfico de dispersión
+    #grafico de dispersion
     dcc.Graph(figure=fig, style={'height': '50vh'}),
 
-    # Mostrar las películas del Top 10 con sus imágenes
+    # en estas lienas muestro las imagenes y datos de las 10 peliculas, ademas del color y todas sus caracteristicas como el tamaño etc
     html.Div([
         html.Div([
             html.Img(src=row['image_url'], style={'width': '200px', 'height': '300px', 'marginRight': '20px'}),
@@ -84,6 +82,6 @@ app.layout = html.Div(style={'backgroundColor': '#FFB81C', 'padding': '20px'}, c
     ], style={'padding': '20px', 'color': 'white'})
 ])
 
-# Ejecutar la app
+
 if __name__ == '__main__':
     app.run_server(debug=True)
